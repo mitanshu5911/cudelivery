@@ -20,11 +20,10 @@ const Header = () => {
       setIsMobile(window.innerWidth < 768);
     }
 
-    console.log(isAuthenticated);
 
     window.addEventListener("resize", handleResize);
     return ()=> window.removeEventListener("resize", handleResize);
-  },[isAuthenticated]);
+  },[]);
 
   return (
     <>

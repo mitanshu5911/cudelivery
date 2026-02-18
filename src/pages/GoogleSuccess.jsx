@@ -5,38 +5,35 @@ import { getCurrentUser } from "../services/authService";
 
 function GoogleSuccess() {
   const navigate = useNavigate();
-  const {login} = useAuth();
+  const { login } = useAuth();
 
   useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get("token");
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
 
-  if(!token){
-    // navigate("/login");
-    return;
-  };
- 
-  localStorage.setItem("token", token);
+    if (!token) {
+      navigate("/login");
+      return;
+    }
 
-   
+    localStorage.setItem("token", token);
 
-
-  const fetchUser = async () => {
+    const fetchUser = async () => {
       try {
         const user = await getCurrentUser();
+
+      
         login(token, user);
-        setTimeout(() => {
-          navigate("/home");
-        }, 2000);
-        
-      } catch (error) {
-        console.error("Google login failed", error);
+
+       navigate('/home');
+      } catch (err) {
+        console.error("Google login failed", err);
         navigate("/login");
       }
-  }
+    };
 
-  fetchUser();
-}, [login,navigate]);
+    fetchUser();
+  }, []);
 
   return <p>Logging you in...</p>;
 }

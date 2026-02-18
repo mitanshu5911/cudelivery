@@ -34,7 +34,13 @@ function Login() {
         password,
       };
       let res = await loginUser(formData);
-      login(res.token, res.user);
+      const user = {
+        _id: res._id,
+        name: res.name,
+        email: res.email,
+      }
+      console.log("Login response:", user);
+      login(res.token, user);
       setSuccess(res.message);
       setError("");
       navigate("/home");
@@ -44,7 +50,7 @@ function Login() {
       if (err.response?.status === 500) {
         setError("Server problem");
       } else {
-        setError(err.response?.data?.message || "Something went wrong");
+        setError(err.response?.message || "Something went wrong");
       }
     }
   };
