@@ -1,9 +1,11 @@
 import { createContext, useContext, useState } from "react";
 import { getMyProfile } from "../services/profileServices";
+import { useNavigate } from "react-router-dom";
 
 const ProfileContext = createContext();
 
 export const ProfileProvider = ({ children }) => {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(
     JSON.parse(localStorage.getItem("profile")) || null,
   );
@@ -11,17 +13,21 @@ export const ProfileProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
 
   const fetchProfile = async () => {
-    try {
-      setLoading(true);
-      const data = await getMyProfile();
-      setProfile(data.profile);
-      localStorage.setItem("profile", JSON.stringify(data.profile));
-    } catch (error) {
-      console.error("Profile fetch error:", error);
-    } finally {
-      setLoading(false);
+  setLoading(true);
+  try {
+    const data = await getMyProfile();
+    setProfile(data.profile);
+    localStorage.setItem("profile", JSON.stringify(data.profile));
+    return true; // profile exists
+  } catch (error) {
+    if (error.response?.status === 404) {
+      return false; // profile missing
     }
-  };
+    throw error;
+  } finally {
+    setLoading(false);
+  }
+};
 
   const clearProfile = () => {
     setProfile(null);

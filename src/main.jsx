@@ -7,7 +7,7 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 import { ProfileProvider } from "./context/ProfileContext.jsx";
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
+  // <StrictMode>
     <BrowserRouter>
       <ProfileProvider>
         <AuthProvider>
@@ -15,5 +15,5 @@ createRoot(document.getElementById("root")).render(
         </AuthProvider>
       </ProfileProvider>
     </BrowserRouter>
-  </StrictMode>,
+  // </StrictMode>
 );

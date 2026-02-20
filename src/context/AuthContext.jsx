@@ -7,7 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true); // ✅ ADD
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { fetchProfile, clearProfile } = useProfile();
   useEffect(() => {
@@ -26,20 +26,31 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem("user");
       }
     }
-    // fetchProfile(); // ✅ FETCH profile on auth restore
+    
 
-    setLoading(false); // ✅ IMPORTANT
+    setLoading(false);
   }, []);
 
-  const login = (token, user) => {
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
-    console.log(token);
-    setToken(token);
-    setUser(user);
-    setIsAuthenticated(true);
-    fetchProfile();
-  };
+  const login = async (token, user) => {
+  localStorage.setItem("token", token);
+  localStorage.setItem("user", JSON.stringify(user));
+
+  setToken(token);
+  setUser(user);
+  setIsAuthenticated(true);
+
+  try {
+    const hasProfile = await fetchProfile();
+
+    if (hasProfile) {
+      navigate("/home");
+    } else {
+      navigate("/profile");
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const logout = () => {
     localStorage.removeItem("token");

@@ -43,7 +43,6 @@ function Login() {
       login(res.token, user);
       setSuccess(res.message);
       setError("");
-      navigate("/home");
     } catch (err) {
       setSuccess("");
 
@@ -82,6 +81,7 @@ function Login() {
               </span>
               <input
                 type="text"
+                name="eamil"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="flex-1 py-2 outline-none"
@@ -98,6 +98,7 @@ function Login() {
                 type={showPassword ? "text" : "password"}
                 className="flex-1 py-2 pr-10 outline-none bg-transparent"
                 placeholder="Password"
+                name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"

@@ -5,7 +5,7 @@ export const getMyProfile = async () => {
     const res = await api.get("/profile/get");
     return res.data;
   } catch (error) {
-    throw error.response?.data || { message: "Failed to fetch profile" };
+    throw error;
   }
 };
 
