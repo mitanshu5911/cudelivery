@@ -5,7 +5,7 @@ import { IoMdKey } from "react-icons/io";
 import { loginUser } from "../services/authService";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import  googleLogo  from "../assets/googleLogo.png";
+import googleLogo from "../assets/googleLogo.png";
 function Login() {
   const navigate = useNavigate();
 
@@ -38,7 +38,7 @@ function Login() {
         _id: res._id,
         name: res.name,
         email: res.email,
-      }
+      };
       console.log("Login response:", user);
       login(res.token, user);
       setSuccess(res.message);
@@ -112,8 +112,12 @@ function Login() {
                 {showPassword ? <FaEye /> : <FaEyeSlash />}
               </span>
             </div>
-            <span className="w-full justify-baseline">Forgot password?</span>
-
+            <span
+              className="w-full cursor-pointer"
+              onClick={() => navigate("/forgot-password")}
+            >
+              Forgot password?
+            </span>
             <button
               type="submit"
               className="w-2/3 h-10 bg-orange-600  mt-3 text-white cursor-pointer rounded-xl hover:border-2 hover:border-orange-600 hover:bg-white hover:text-orange-600"

@@ -1,8 +1,15 @@
-import React from 'react'
-import { useAuth } from '../context/AuthContext'
+import React, { useEffect } from 'react'
+import { useAuth } from '../context/AuthContext.jsx'
 
 function Home() {
-  const { logout } = useAuth();
+  const { logout, authMessage, setAuthMessage } = useAuth();
+
+  useEffect(() => {
+    if (authMessage) {
+      // alert(authMessage);
+      setAuthMessage("");
+    }
+  }, [authMessage]);
 
   return (
     <button type="button" onClick={logout}>
