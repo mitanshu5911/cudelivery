@@ -11,6 +11,7 @@ import RoleProtectedLayout from "./components/layouts/RoleProtectedLayout.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 import GuestRoute from "./components/layouts/GuestRoute.jsx";
+import CreateRequest from "./pages/request/CreateRequest.jsx";
 
 function App() {
   return (
@@ -21,8 +22,8 @@ function App() {
         <Routes>
           <Route element={<GuestRoute />}>
             <Route path="/register" element={<Register />} />
-            <Route path="/google-success" element={<GoogleSuccess />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/google-success" element={<GoogleSuccess />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
           </Route>
@@ -36,7 +37,9 @@ function App() {
 
               <Route
                 element={<RoleProtectedLayout allowedRoles={["Hosteller"]} />}
-              ></Route>
+              >
+                <Route path="/create_request" element={<CreateRequest/>}/>
+              </Route>
 
               <Route
                 element={<RoleProtectedLayout allowedRoles={["DayScholar"]} />}

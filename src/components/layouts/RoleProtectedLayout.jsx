@@ -1,10 +1,14 @@
 import React from "react";
 import { useProfile } from "../../context/ProfileContext";
+import { Navigate, Outlet } from "react-router-dom";
 
-function RoleProtectedLayout({allowedRoles}) {
-  const { role } = useProfile();
+function RoleProtectedLayout({ allowedRoles }) {
+  const { profile } = useProfile();
 
-  if (!allowedRoles.includes(role)) {
+  
+  if (!profile) return null;
+
+  if (!allowedRoles.includes(profile.role)) {
     return <Navigate to="/unauthorized" replace />;
   }
 

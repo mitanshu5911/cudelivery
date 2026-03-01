@@ -20,8 +20,10 @@ function GoogleSuccess() {
 
     const fetchUser = async () => {
       try {
-        const user = await getCurrentUser();    
+        const user = await getCurrentUser();  
+        setTimeout(()=>{
         login(token, user);
+        },2000) ;
       } catch (err) {
         console.error("Google login failed", err);
         navigate("/login");

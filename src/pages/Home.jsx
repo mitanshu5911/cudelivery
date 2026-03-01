@@ -6,7 +6,7 @@ function Home() {
 
   useEffect(() => {
     if (authMessage) {
-      // alert(authMessage);
+      alert(authMessage);
       setAuthMessage("");
     }
   }, [authMessage]);
