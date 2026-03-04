@@ -1,9 +1,10 @@
 import { AnimatePresence } from "framer-motion";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ItemRow from "../../components/request/ItemRow";
 import { MapPin, PlusCircle } from "lucide-react";
 import { createRequest } from "../../services/requestService";
 import AlertToast from "../../components/ui/AlertToast";
+import useIsMobile from "../../components/layouts/IsMobile.jsx";
 
 const urgencyList = ["low", "medium", "high"];
 
@@ -15,20 +16,29 @@ const defaultItem = {
 };
 
 const CreateRequest = () => {
-  
-  const [items, setItems] = useState([
-    { ...defaultItem },
-    { ...defaultItem },
-    { ...defaultItem },
-  ]);
+  const isMobile = useIsMobile();
 
+  const [items, setItems] = useState(
+     []  
+  );
+
+  useEffect(() => {
+  if (isMobile) {
+    setItems([{ ...defaultItem }]);
+  } else {
+    setItems([
+      { ...defaultItem },
+      { ...defaultItem },
+      { ...defaultItem },
+    ]);
+  }
+}, [isMobile]);
   const [deliveryLocation, setDeliveryLocation] = useState("");
   const [deliveryFee, setDeliveryFee] = useState("");
   const [urgency, setUrgency] = useState("low");
   const [instructions, setInstructions] = useState("");
   const [loading, setLoading] = useState(false);
 
-  
   const [toast, setToast] = useState({
     visible: false,
     type: "success",
@@ -40,7 +50,7 @@ const CreateRequest = () => {
   };
 
   const removeItem = (index) => {
-    if (items.length ===1) return;
+    if (items.length === 1) return;
     setItems(items.filter((_, i) => i !== index));
   };
 
@@ -54,7 +64,6 @@ const CreateRequest = () => {
     setItems(updated);
   };
 
-  
   const itemsTotal = items.reduce((sum, item) => {
     const qty = Number(item.quantity);
     const price = Number(item.estimatedPrice);
@@ -68,14 +77,13 @@ const CreateRequest = () => {
     !deliveryFee || isNaN(numericDelivery)
       ? 20
       : numericDelivery < 20
-      ? 20
-      : numericDelivery;
+        ? 20
+        : numericDelivery;
 
   const grandTotal = itemsTotal + finalDelivery;
 
   const handleSubmit = async () => {
     try {
-            
       const validItems = [];
       let filledCount = 0;
 
@@ -97,7 +105,7 @@ const CreateRequest = () => {
           ) {
             showToast(
               "error",
-              `Row ${i + 1} is incomplete. Please fill all required fields.`
+              `Row ${i + 1} is incomplete. Please fill all required fields.`,
             );
             return;
           }
@@ -134,12 +142,7 @@ const CreateRequest = () => {
 
       showToast("success", "Request Created Successfully!");
 
-      
-      setItems([
-        { ...defaultItem },
-        { ...defaultItem },
-        { ...defaultItem },
-      ]);
+      setItems([{ ...defaultItem }, { ...defaultItem }, { ...defaultItem }]);
       setDeliveryLocation("");
       setDeliveryFee("");
       setUrgency("low");
@@ -147,12 +150,16 @@ const CreateRequest = () => {
     } catch (error) {
       showToast(
         "error",
-        error.response?.data?.message || "Something went wrong"
+        error.response?.data?.message || "Something went wrong",
       );
     } finally {
       setLoading(false);
     }
   };
+
+
+ 
+
 
   return (
     <div className="w-full p-6 md:p-12">
@@ -166,7 +173,8 @@ const CreateRequest = () => {
             <div>
               <h2 className="text-xl font-semibold mb-4">Items</h2>
 
-              <div className="grid grid-cols-12 text-sm font-semibold text-gray-700 mb-2 px-2">
+              {!isMobile && (
+                <div className="grid grid-cols-12 text-sm font-semibold text-gray-700 mb-2 px-2">
                 <span className="col-span-4 pl-4">Item</span>
                 <span className="col-span-2 text-center">Qty</span>
                 <span className="col-span-2 text-center">Unit</span>
@@ -176,6 +184,7 @@ const CreateRequest = () => {
                 <span className="col-span-1 text-center">Total</span>
                 <span className="col-span-1"></span>
               </div>
+              )}
 
               <div className="max-h-48 overflow-y-auto pr-2 pb-2">
                 <AnimatePresence>
@@ -186,6 +195,7 @@ const CreateRequest = () => {
                       index={index}
                       updateItem={updateItem}
                       removeItem={removeItem}
+                      isMobile={isMobile}
                     />
                   ))}
                 </AnimatePresence>
@@ -207,7 +217,11 @@ const CreateRequest = () => {
                 rows="6"
                 value={instructions}
                 onChange={(e) => setInstructions(e.target.value)}
-                className="w-full bg-white rounded-xl p-4 focus:ring-2 focus:ring-orange-600 outline-none"
+                className="w-full bg-white rounded-xl p-4 
+             focus:ring-2 focus:ring-orange-600 
+             outline-none 
+             text-sm md:text-base 
+             min-h-30 md:min-h-40"
                 placeholder="Add special instructions..."
               />
             </div>
@@ -304,14 +318,11 @@ const CreateRequest = () => {
         </div>
       </div>
 
-      
       <AlertToast
         visible={toast.visible}
         type={toast.type}
         message={toast.message}
-        onClose={() =>
-          setToast((prev) => ({ ...prev, visible: false }))
-        }
+        onClose={() => setToast((prev) => ({ ...prev, visible: false }))}
       />
     </div>
   );

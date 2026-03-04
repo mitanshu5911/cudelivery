@@ -1,4 +1,5 @@
 import axios from "axios";
+// import { set } from "mongoose";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -10,6 +11,25 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
-});
+},
+(error) => Promise.reject(error)
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      // redirect to login
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 1000);
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export default api;

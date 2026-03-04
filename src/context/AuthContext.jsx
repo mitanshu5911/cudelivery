@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProfile } from "./ProfileContext";
+import { jwtDecode } from "jwt-decode";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -16,8 +17,20 @@ export const AuthProvider = ({ children }) => {
     const savedUser = localStorage.getItem("user");
 
     if (savedToken) {
-      setToken(savedToken);
-      setIsAuthenticated(true);
+      try {
+      const decoded = jwtDecode(savedToken);
+
+      if (decoded.exp * 1000 < Date.now()) {
+        logout();
+      } else {
+        setToken(savedToken);
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      setTimeout(() => {
+        logout();
+      }, 1000);
+    }
     }
 
     if (savedUser && savedUser !== "undefined") {

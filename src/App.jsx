@@ -12,6 +12,8 @@ import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 import GuestRoute from "./components/layouts/GuestRoute.jsx";
 import CreateRequest from "./pages/request/CreateRequest.jsx";
+import GetPendingRequest from "./pages/request/GetPendingRequest.jsx";
+import GetMyDeliveries from "./pages/request/GetMyDeliveries.jsx";
 
 function App() {
   return (
@@ -43,7 +45,10 @@ function App() {
 
               <Route
                 element={<RoleProtectedLayout allowedRoles={["DayScholar"]} />}
-              ></Route>
+              >
+                <Route path='/pending_requests' element={<GetPendingRequest/>}/>
+                <Route path='/my_deliveries' element={<GetMyDeliveries/>}/>
+              </Route>
             </Route>
           </Route>
         </Routes>
