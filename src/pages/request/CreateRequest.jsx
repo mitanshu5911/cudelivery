@@ -2,9 +2,10 @@ import { AnimatePresence } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import ItemRow from "../../components/request/ItemRow";
 import { MapPin, PlusCircle } from "lucide-react";
-import { createRequest } from "../../services/requestService";
+import { createRequest, getRequestById, updateRequest } from "../../services/requestService";
 import AlertToast from "../../components/ui/AlertToast";
 import useIsMobile from "../../components/layouts/IsMobile.jsx";
+import { useParams } from "react-router-dom";
 
 const urgencyList = ["low", "medium", "high"];
 
@@ -138,9 +139,13 @@ const CreateRequest = () => {
         instructions: instructions.trim(),
       };
 
-      await createRequest(payload);
-
-      showToast("success", "Request Created Successfully!");
+      if (isEditMode) {
+  await updateRequest(id, payload);
+  showToast("success", "Request Updated Successfully!");
+} else {
+  await createRequest(payload);
+  showToast("success", "Request Created Successfully!");
+}
 
       setItems([{ ...defaultItem }, { ...defaultItem }, { ...defaultItem }]);
       setDeliveryLocation("");
@@ -157,15 +162,36 @@ const CreateRequest = () => {
     }
   };
 
+  const {id} = useParams();
+
+  const isEditMode = Boolean(id);
 
  
+  useEffect(() => {
+  if (!id) return;
 
+  const loadRequest = async () => {
+    try {
+      const data = await getRequestById(id);
+
+      setItems(data.items);
+      setDeliveryLocation(data.deliveryLocation);
+      setDeliveryFee(data.deliveryFee);
+      setUrgency(data.urgency);
+      setInstructions(data.instructions || "");
+    } catch (error) {
+      showToast("error", "Failed to load request");
+    }
+  };
+
+  loadRequest();
+}, [id]);
 
   return (
     <div className="w-full p-6 md:p-12">
       <div className="w-full max-w-7xl mx-auto bg-white rounded-3xl shadow-2xl p-8">
         <h1 className="text-4xl font-bold mb-8 text-gray-800">
-          Create Request
+          {isEditMode ? "Edit Request" : "Create Request"}
         </h1>
 
         <div className="grid md:grid-cols-3 gap-10">

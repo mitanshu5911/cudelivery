@@ -62,3 +62,34 @@ export const getMyDeliveries = async () => {
         throw error;    
     }
 }
+
+export const getMyRequests = async () => {
+    try {
+        const response = await api.get("/request/my-requests");
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+export const deleteRequest = async (id) => {
+    try {
+        const response = await api.delete(`/request/${id}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const getRequestById = async (id) => {
+  try {
+    const res = await api.get(`/request/${id}`);
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const updateRequest = async (id, payload) => {
+  const res = await api.patch(`/request/${id}`, payload);
+  return res.data;
+};

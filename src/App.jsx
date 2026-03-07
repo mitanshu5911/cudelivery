@@ -14,6 +14,7 @@ import GuestRoute from "./components/layouts/GuestRoute.jsx";
 import CreateRequest from "./pages/request/CreateRequest.jsx";
 import GetPendingRequest from "./pages/request/GetPendingRequest.jsx";
 import GetMyDeliveries from "./pages/request/GetMyDeliveries.jsx";
+import GetMyRequests from "./pages/request/GetMyRequests.jsx";
 
 function App() {
   return (
@@ -41,6 +42,8 @@ function App() {
                 element={<RoleProtectedLayout allowedRoles={["Hosteller"]} />}
               >
                 <Route path="/create_request" element={<CreateRequest/>}/>
+                <Route path="/my_requests" element={<GetMyRequests/>}/>
+                <Route path="/request/edit/:id" element={<CreateRequest />} />
               </Route>
 
               <Route

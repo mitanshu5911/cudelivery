@@ -217,7 +217,7 @@ const RequestModal = ({ request, onClose, onStatusChange }) => {
                     <NotebookPen size={14} className="inline mr-1" />
                     Special Instructions
                   </p>
-                  <p className="text-gray-600">{request.instructions}</p>
+                  <p className="text-gray-600 wrap-break-word">{request.instructions}</p>
                 </div>
               )}
 
