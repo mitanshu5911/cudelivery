@@ -3,6 +3,7 @@ import { acceptRequest, getPendingRequests } from "../../services/requestService
 import AlertToast from "../../components/ui/AlertToast";
 import RequestCard from "../../components/request/RequestCard";
 import RequestModal from "../../components/request/RequestModal";
+import { useSearchParams } from "react-router-dom";
 
 const urgencyPriority = {
   high: 3,
@@ -11,6 +12,8 @@ const urgencyPriority = {
 };
 
 const GetPendingRequest = () => {
+  const [searchParams] = useSearchParams();
+const requestId = searchParams.get("request");
   const [requests, setRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -79,6 +82,16 @@ const GetPendingRequest = () => {
     fetchRequests();
    
   }, []);
+
+  useEffect(() => {
+  if (!requestId || requests.length === 0) return;
+
+  const request = requests.find(r => r._id === requestId);
+
+  if (request) {
+    setSelectedRequest(request);
+  }
+}, [requestId, requests]);
 
   const filteredRequests = useMemo(() => {
     return requests.filter((req) => {

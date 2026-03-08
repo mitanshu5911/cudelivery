@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { getMyDeliveries } from "../../services/requestService";
-import Alert from "../../components/layouts/Alert";
+// import Alert from "../../components/layouts/Alert";
 import AlertToast from "../../components/ui/AlertToast";
 import RequestModal from "../../components/request/RequestModal";
 import RequestCard from "../../components/request/RequestCard";
+import { useSearchParams } from "react-router-dom";
 import {
   markPickedRequest,
   completeRequest,
@@ -11,14 +12,21 @@ import {
 } from "../../services/requestService";
 
 const GetMyDeliveries = () => {
+
+   const [searchParams] = useSearchParams();
+   const tabFormUrl = searchParams.get("tab");
+    const requestId = searchParams.get("request");
+
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [selectedTab, setSelectedTab] = useState("active");
+  const [selectedTab, setSelectedTab] = useState(tabFormUrl || "active");;
 
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("success");
   const [toastVisible, setToastVisible] = useState(false);
+
+ 
 
   const fetchMyDeliveries = async () => {
     try {
@@ -38,6 +46,16 @@ const GetMyDeliveries = () => {
   useEffect(() => {
     fetchMyDeliveries();
   }, []);
+
+  useEffect(() => {
+  if (!requestId || requests.length === 0) return;
+
+  const req = requests.find(r => r._id === requestId);
+
+  if (req) {
+    setSelectedRequest(req);
+  }
+}, [requestId, requests]);
 
   const filteredRequests = useMemo(() => {
     return requests.filter((req) => {

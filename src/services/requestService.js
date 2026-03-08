@@ -1,15 +1,15 @@
 import api from "../utils/api";
 
-export const createRequest = async(data) => {
+export const createRequest = async (data) => {
     try {
-        const response = await api.post("/request",data);
+        const response = await api.post("/request", data);
         return response.data;
     } catch (error) {
         throw error;
     }
 }
 
-export const getPendingRequests = async() => {
+export const getPendingRequests = async () => {
     try {
         const response = await api.get("/request/pending");
         return response.data;
@@ -18,7 +18,7 @@ export const getPendingRequests = async() => {
     }
 }
 
-export const acceptRequest = async(id) => {
+export const acceptRequest = async (id) => {
     try {
         const response = await api.patch(`/request/${id}/accept`);
         return response.data;
@@ -27,7 +27,7 @@ export const acceptRequest = async(id) => {
     }
 };
 
-export const markPickedRequest  = async(id) => {
+export const markPickedRequest = async (id) => {
     try {
         const response = await api.patch(`/request/${id}/picked`);
         return response.data;
@@ -36,7 +36,7 @@ export const markPickedRequest  = async(id) => {
     }
 };
 
-export const completeRequest   = async(id) => {
+export const completeRequest = async (id) => {
     try {
         const response = await api.patch(`/request/${id}/complete`);
         return response.data;
@@ -45,7 +45,7 @@ export const completeRequest   = async(id) => {
     }
 };
 
-export const  cancelRequest   = async(id) => {
+export const cancelRequest = async (id) => {
     try {
         const response = await api.patch(`/request/${id}/cancel`);
         return response.data;
@@ -59,7 +59,7 @@ export const getMyDeliveries = async () => {
         const response = await api.get("/request/my-deliveries");
         return response.data;
     } catch (error) {
-        throw error;    
+        throw error;
     }
 }
 
@@ -81,15 +81,19 @@ export const deleteRequest = async (id) => {
 }
 
 export const getRequestById = async (id) => {
-  try {
-    const res = await api.get(`/request/${id}`);
-    return res.data;
-  } catch (error) {
-    throw error;
-  }
+    try {
+        const res = await api.get(`/request/${id}`);
+        return res.data;
+    } catch (error) {
+        throw error;
+    }
 };
 
 export const updateRequest = async (id, payload) => {
-  const res = await api.patch(`/request/${id}`, payload);
-  return res.data;
+    try {
+        const res = await api.patch(`/request/${id}`, payload);
+        return res.data;
+    } catch (error) {
+        throw error;
+    }
 };
