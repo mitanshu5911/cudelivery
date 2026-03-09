@@ -1,7 +1,7 @@
 import React from "react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import bgImage from "../../assets/dayscholarGreeting.png";
+import bgImage from "../../../assets/dayscholarGreeting.png";
 
 const Greeting = () => {
   const { user } = useAuth();

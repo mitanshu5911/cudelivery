@@ -44,7 +44,7 @@ const MyRequestModal = ({ request, onClose, onEdit, onDelete, onCancel }) => {
 
           <div className="px-5 py-4 border-b">
             <div className="flex justify-between min-w-75 relative">
-              <div className="absolute top-3 left-0 right-0 h-0.5 bg-gray-200 "></div>
+              <div className="absolute top-2 left-0 right-0 h-0.5 bg-gray-200 "></div>
 
               {steps.map((step, index) => {
                 const active = index <= currentStep;

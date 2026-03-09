@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getPendingRequests } from "../../services/requestService";
+import { getPendingRequests } from "../../../services/requestService.js";
 import { MapPin, Flame } from "lucide-react";
 
 const AvailableRequests = () => {
@@ -27,7 +27,7 @@ const AvailableRequests = () => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col h-full">
+    <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col h-full mx-2 md:mx-0">
 
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">

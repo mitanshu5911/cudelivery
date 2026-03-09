@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getPendingRequests, getMyDeliveries } from "../../services/requestService";
+import { getPendingRequests, getMyDeliveries } from "../../../services/requestService";
 import { Bell } from "lucide-react";
 
 const NotificationsPanel = () => {
