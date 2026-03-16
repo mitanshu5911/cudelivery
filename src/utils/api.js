@@ -1,8 +1,8 @@
 import axios from "axios";
-// import { set } from "mongoose";
 
+const url = import.meta.env.VITE_API_BASE_URL;
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: `${url}/api`,
 });
 
 api.interceptors.request.use((config) => {

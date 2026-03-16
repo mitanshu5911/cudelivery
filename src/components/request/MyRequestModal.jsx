@@ -1,8 +1,16 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, MapPin, MessageCircle, Package, User, X } from "lucide-react";
+import ChatModal from "../chat/ChatModal";
+import { useState } from "react";
+import RatingModal from "../rating/RatingModal";
+import { Star } from "lucide-react";
+
 const steps = ["pending", "accepted", "picked", "completed"];
 const MyRequestModal = ({ request, onClose, onEdit, onDelete, onCancel }) => {
   if (!request) return null;
+
+  const [openChat, setOpenChat] = useState(false);
+  const [openRating, setOpenRating] = useState(false);
 
   const currentStep = steps.indexOf(request.status);
   return (
@@ -172,7 +180,10 @@ const MyRequestModal = ({ request, onClose, onEdit, onDelete, onCancel }) => {
 
                 <div className="mt-6 space-y-3">
                   {request.acceptedBy && (
-                    <button className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => setOpenChat(true)}
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg flex items-center justify-center gap-2"
+                    >
                       <MessageCircle size={16} />
                       Chat with Deliverer
                     </button>
@@ -204,10 +215,34 @@ const MyRequestModal = ({ request, onClose, onEdit, onDelete, onCancel }) => {
                       Cancel Request
                     </button>
                   )}
+
+                  {request.status === "completed" && request.acceptedBy && (
+                    <button
+                      onClick={() => setOpenRating(true)}
+                      className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg flex items-center justify-center gap-2"
+                    >
+                      <Star size={16} />
+                      Rate Delivery Partner
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
           </div>
+
+          {openChat && (
+            <ChatModal request={request} onClose={() => setOpenChat(false)} />
+          )}
+
+          {openRating && (
+            <RatingModal
+              requestId={request._id}
+              onClose={() => setOpenRating(false)}
+              onSuccess={() => {
+                alert("Rating submitted successfully ⭐");
+              }}
+            />
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
