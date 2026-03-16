@@ -22,7 +22,7 @@ function Login() {
 
   const url = import.meta.env.VITE_API_BASE_URL;
   const handleGoogleLogin = () => {
-    window.location.href = `${url}/auth/google`;
+    window.location.href = `${url}/api/auth/google`;
   };
 
   const handleLogin = async (e) => {
