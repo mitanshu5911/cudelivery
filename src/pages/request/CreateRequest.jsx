@@ -1,11 +1,17 @@
 import { AnimatePresence } from "framer-motion";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import ItemRow from "../../components/request/ItemRow";
 import { MapPin, PlusCircle } from "lucide-react";
-import { createRequest, getRequestById, updateRequest } from "../../services/requestService";
-import AlertToast from "../../components/ui/AlertToast";
+import {
+  createRequest,
+  getRequestById,
+  updateRequest,
+} from "../../services/requestService";
 import useIsMobile from "../../components/layouts/IsMobile.jsx";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { useToast } from "../../context/ToastContext";
+import { useLoading } from "../../context/LoadingContext";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 const urgencyList = ["low", "medium", "high"];
 
@@ -18,37 +24,32 @@ const defaultItem = {
 
 const CreateRequest = () => {
   const isMobile = useIsMobile();
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-  const [items, setItems] = useState(
-     []  
-  );
+  const { showToast } = useToast();
+  const { startLoading, stopLoading } = useLoading();
 
-  useEffect(() => {
-  if (isMobile) {
-    setItems([{ ...defaultItem }]);
-  } else {
-    setItems([
-      { ...defaultItem },
-      { ...defaultItem },
-      { ...defaultItem },
-    ]);
-  }
-}, [isMobile]);
+  const isEditMode = Boolean(id);
+
+  const [items, setItems] = useState([]);
   const [deliveryLocation, setDeliveryLocation] = useState("");
   const [deliveryFee, setDeliveryFee] = useState("");
   const [urgency, setUrgency] = useState("low");
   const [instructions, setInstructions] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
 
-  const [toast, setToast] = useState({
-    visible: false,
-    type: "success",
-    message: "",
-  });
-
-  const showToast = (type, message) => {
-    setToast({ visible: true, type, message });
-  };
+  useEffect(() => {
+    if (isMobile) {
+      setItems([{ ...defaultItem }]);
+    } else {
+      setItems([
+        { ...defaultItem },
+        { ...defaultItem },
+        { ...defaultItem },
+      ]);
+    }
+  }, [isMobile]);
 
   const removeItem = (index) => {
     if (items.length === 1) return;
@@ -65,23 +66,24 @@ const CreateRequest = () => {
     setItems(updated);
   };
 
-  const itemsTotal = items.reduce((sum, item) => {
-    const qty = Number(item.quantity);
-    const price = Number(item.estimatedPrice);
-    if (!qty || !price) return sum;
-    return sum + qty * price;
-  }, 0);
+  const itemsTotal = useMemo(() => {
+    return items.reduce((sum, item) => {
+      const qty = Number(item.quantity);
+      const price = Number(item.estimatedPrice);
+      if (!qty || !price) return sum;
+      return sum + qty * price;
+    }, 0);
+  }, [items]);
 
-  const numericDelivery = Number(deliveryFee);
+  const finalDelivery = useMemo(() => {
+    const num = Number(deliveryFee);
+    if (!isNaN(num) && num >= 20) return num;
+    return 20;
+  }, [deliveryFee]);
 
-  const finalDelivery =
-    !deliveryFee || isNaN(numericDelivery)
-      ? 20
-      : numericDelivery < 20
-        ? 20
-        : numericDelivery;
-
-  const grandTotal = itemsTotal + finalDelivery;
+  const grandTotal = useMemo(() => {
+    return itemsTotal + finalDelivery;
+  }, [itemsTotal, finalDelivery]);
 
   const handleSubmit = async () => {
     try {
@@ -106,7 +108,7 @@ const CreateRequest = () => {
           ) {
             showToast(
               "error",
-              `Row ${i + 1} is incomplete. Please fill all required fields.`,
+              `Row ${i + 1} is incomplete. Please fill all required fields.`
             );
             return;
           }
@@ -129,7 +131,14 @@ const CreateRequest = () => {
         return;
       }
 
-      setLoading(true);
+      if (deliveryFee && Number(deliveryFee) < 20) {
+        showToast("error", "Minimum delivery fee is ₹20");
+        return;
+      }
+
+      startLoading(
+        isEditMode ? "Updating request..." : "Creating request..."
+      );
 
       const payload = {
         items: validItems,
@@ -140,52 +149,48 @@ const CreateRequest = () => {
       };
 
       if (isEditMode) {
-  await updateRequest(id, payload);
-  showToast("success", "Request Updated Successfully!");
-} else {
-  await createRequest(payload);
-  showToast("success", "Request Created Successfully!");
-}
+        await updateRequest(id, payload);
+        showToast("success", "Request Updated Successfully!");
+      } else {
+        await createRequest(payload);
+        showToast("success", "Request Created Successfully!");
+      }
 
-      setItems([{ ...defaultItem }, { ...defaultItem }, { ...defaultItem }]);
-      setDeliveryLocation("");
-      setDeliveryFee("");
-      setUrgency("low");
-      setInstructions("");
+      navigate("/my_requests");
+
     } catch (error) {
       showToast(
         "error",
-        error.response?.data?.message || "Something went wrong",
+        error.response?.data?.message || "Something went wrong"
       );
     } finally {
-      setLoading(false);
+      stopLoading();
     }
   };
 
-  const {id} = useParams();
-
-  const isEditMode = Boolean(id);
-
- 
   useEffect(() => {
-  if (!id) return;
+    if (!id) return;
 
-  const loadRequest = async () => {
-    try {
-      const data = await getRequestById(id);
+    const loadRequest = async () => {
+      try {
+        startLoading("Loading request...");
 
-      setItems(data.items);
-      setDeliveryLocation(data.deliveryLocation);
-      setDeliveryFee(data.deliveryFee);
-      setUrgency(data.urgency);
-      setInstructions(data.instructions || "");
-    } catch (error) {
-      showToast("error", "Failed to load request");
-    }
-  };
+        const data = await getRequestById(id);
 
-  loadRequest();
-}, [id]);
+        setItems(data.items || []);
+        setDeliveryLocation(data.deliveryLocation || "");
+        setDeliveryFee(data.deliveryFee ? String(data.deliveryFee) : "");
+        setUrgency(data.urgency || "low");
+        setInstructions(data.instructions || "");
+      } catch (error) {
+        showToast("error", "Failed to load request");
+      } finally {
+        stopLoading();
+      }
+    };
+
+    loadRequest();
+  }, [id]);
 
   return (
     <div className="w-full p-6 md:p-12">
@@ -201,15 +206,15 @@ const CreateRequest = () => {
 
               {!isMobile && (
                 <div className="grid grid-cols-12 text-sm font-semibold text-gray-700 mb-2 px-2">
-                <span className="col-span-4 pl-4">Item</span>
-                <span className="col-span-2 text-center">Qty</span>
-                <span className="col-span-2 text-center">Unit</span>
-                <span className="col-span-2 text-center">
-                  Est. ₹ (per unit)
-                </span>
-                <span className="col-span-1 text-center">Total</span>
-                <span className="col-span-1"></span>
-              </div>
+                  <span className="col-span-4 pl-4">Item</span>
+                  <span className="col-span-2 text-center">Qty</span>
+                  <span className="col-span-2 text-center">Unit</span>
+                  <span className="col-span-2 text-center">
+                    Est. ₹ (per unit)
+                  </span>
+                  <span className="col-span-1 text-center">Total</span>
+                  <span className="col-span-1"></span>
+                </div>
               )}
 
               <div className="max-h-48 overflow-y-auto pr-2 pb-2">
@@ -243,11 +248,7 @@ const CreateRequest = () => {
                 rows="6"
                 value={instructions}
                 onChange={(e) => setInstructions(e.target.value)}
-                className="w-full bg-white rounded-xl p-4 
-             focus:ring-2 focus:ring-orange-600 
-             outline-none 
-             text-sm md:text-base 
-             min-h-30 md:min-h-40"
+                className="w-full bg-white rounded-xl p-4 focus:ring-2 focus:ring-orange-600 outline-none text-sm md:text-base min-h-30 md:min-h-40"
                 placeholder="Add special instructions..."
               />
             </div>
@@ -277,6 +278,8 @@ const CreateRequest = () => {
                   <input
                     type="number"
                     value={deliveryFee}
+                    min="20"
+                    step={1}
                     placeholder="Enter delivery fee"
                     onChange={(e) => setDeliveryFee(e.target.value)}
                     className="w-full rounded-xl bg-white px-4 py-3 pl-8 focus:outline-none transition"
@@ -300,8 +303,7 @@ const CreateRequest = () => {
                     <button
                       key={level}
                       onClick={() => setUrgency(level)}
-                      className={`py-3 rounded-2xl font-semibold capitalize transition-all duration-300
-                      ${
+                      className={`py-3 rounded-2xl font-semibold capitalize transition-all duration-300 ${
                         urgency === level
                           ? "bg-linear-to-r from-orange-500 to-orange-600 text-white shadow-lg scale-105"
                           : "bg-gray-100 hover:bg-orange-50 text-gray-700"
@@ -334,22 +336,14 @@ const CreateRequest = () => {
 
               <button
                 onClick={handleSubmit}
-                disabled={loading}
-                className="w-full mt-6 bg-linear-to-r from-orange-500 to-orange-600 text-white py-3 rounded-xl font-semibold hover:scale-[1.02] transition shadow-md disabled:opacity-50"
+                className="w-full mt-6 bg-linear-to-r from-orange-500 to-orange-600 text-white py-3 rounded-xl font-semibold hover:scale-[1.02] transition shadow-md "
               >
-                {loading ? "Submitting..." : "Submit Request"}
+                Submit Request
               </button>
             </div>
           </div>
         </div>
       </div>
-
-      <AlertToast
-        visible={toast.visible}
-        type={toast.type}
-        message={toast.message}
-        onClose={() => setToast((prev) => ({ ...prev, visible: false }))}
-      />
     </div>
   );
 };

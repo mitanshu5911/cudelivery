@@ -1,23 +1,26 @@
-import { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useLoading } from "../../context/LoadingContext";
+import { useEffect } from "react";
 
 const GuestRoute = () => {
   const { isAuthenticated, loading } = useAuth();
+  const { startLoading, stopLoading } = useLoading();
 
-  // useEffect(() => {
-  //   if (isAuthenticated) {
-  //     alert("You are already logged in.");
-  //   }
-  // }, [isAuthenticated]);
+  useEffect(() => {
+    if (loading) {
+      startLoading("Checking session...");
+    } else {
+      stopLoading();
+    }
+  }, [loading]);
 
-  if (loading) return <div>Loading...</div>;
-
-  if (isAuthenticated) {
+  if(loading) <div className="min-h-screen"></div>
+  if (!loading && isAuthenticated) {
     return <Navigate to="/home" replace />;
   }
 
   return <Outlet />;
 };
 
-export default GuestRoute
+export default GuestRoute;

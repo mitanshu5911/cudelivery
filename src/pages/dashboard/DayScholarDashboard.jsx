@@ -5,6 +5,7 @@ import AvailableRequests from "../../components/dashboard/dayScholar/AvailableRe
 import MyDeliveriesWidget from "../../components/dashboard/dayScholar/MyDeliveriesWidget.jsx"
 import DeliveryProgress from "../../components/dashboard/dayScholar/DeliveryProgress.jsx"
 import NotificationsPanel from "../../components/dashboard/dayScholar/NotificationsPanel.jsx"
+import WeeklyStatsChart from "../../components/dashboard/dayScholar/WeeklyStatsChart.jsx";
 
 const DayScholarDashboard = () => {
   return (
@@ -15,10 +16,11 @@ const DayScholarDashboard = () => {
 
       <div className="grid lg:grid-cols-2 gap-6">
         <AvailableRequests />
+        <WeeklyStatsChart/>
         <MyDeliveriesWidget />
-        <DeliveryProgress />
         <NotificationsPanel />
       </div>
+        <DeliveryProgress  />
     </div>
   );
 };

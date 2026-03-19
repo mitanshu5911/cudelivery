@@ -1,126 +1,111 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
-import { socket } from "../../socket/socket";
+import { getSocket } from "../../socket/socket";
 import { getChat } from "../../services/chatService";
 import { useAuth } from "../../context/AuthContext";
 
 const ChatModal = ({ request, onClose }) => {
-
   const { user } = useAuth();
+  const socket = getSocket();
 
   const [messages, setMessages] = useState([]);
-
   const bottomRef = useRef();
 
+  // 🔥 Determine other user
+  const otherUser = useMemo(() => {
+    if (!request) return null;
+
+    if (request.hosteller?._id === user._id) {
+      return request.acceptedBy;
+    }
+    return request.hosteller;
+  }, [request, user]);
+
   useEffect(() => {
-
     const loadChat = async () => {
-
       const data = await getChat(request._id);
-
       setMessages(data.messages || []);
     };
-
     loadChat();
-
   }, [request]);
 
   useEffect(() => {
-
-    socket.connect();
+    if (!socket) return;
 
     socket.emit("join_request_room", request._id);
 
-    socket.on("receive_message", (msg) => {
+    socket.on("new_message", ({ requestId, message }) => {
+      if (requestId !== request._id) return;
 
-      setMessages((prev) => [...prev, msg]);
-
+      setMessages((prev) => [...prev, message]);
     });
 
     return () => {
-
-      socket.off("receive_message");
-
+      socket.off("new_message");
     };
-
-  }, [request]);
+  }, [request, socket]);
 
   const sendMessage = (text) => {
-
     socket.emit("send_message", {
       requestId: request._id,
-      senderId: user._id,
-      text
+      text,
     });
-
   };
 
   useEffect(() => {
-
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-
   }, [messages]);
 
   return (
     <AnimatePresence>
-
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50"
       >
-
         <motion.div
-          initial={{ scale: 0.9 }}
-          animate={{ scale: 1 }}
-          exit={{ scale: 0.9 }}
-          className="bg-white w-full max-w-md h-[80vh] rounded-2xl shadow-xl flex flex-col overflow-hidden"
+          initial={{ scale: 0.95, y: 20 }}
+          animate={{ scale: 1, y: 0 }}
+          exit={{ scale: 0.95, y: 20 }}
+          className="bg-white w-full max-w-md h-[82vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden"
         >
+          {/* HEADER */}
+          <div className="flex justify-between items-center px-5 py-4 bg-linear-to-r from-orange-500 to-orange-600 text-white">
+            <div>
+              <h2 className="font-semibold text-lg">
+                {otherUser?.name || "Chat"}
+              </h2>
+              <p className="text-xs opacity-80">Online</p>
+            </div>
 
-          {/* Header */}
-
-          <div className="flex justify-between items-center bg-orange-500 text-white px-4 py-3">
-
-            <h2 className="font-semibold">
-              Chat — {request.orderId}
-            </h2>
-
-            <button onClick={onClose}>
-              <X size={20}/>
+            <button
+              onClick={onClose}
+              className="hover:scale-110 transition"
+            >
+              <X size={20} />
             </button>
-
           </div>
 
-          {/* Messages */}
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
-
+          {/* MESSAGES */}
+          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-linear-to-b from-gray-50 to-white">
             {messages.map((msg, i) => (
-
               <ChatMessage
                 key={i}
                 message={msg}
                 currentUser={user._id}
               />
-
             ))}
-
-            <div ref={bottomRef}/>
-
+            <div ref={bottomRef} />
           </div>
 
-          {/* Input */}
-
-          <ChatInput onSend={sendMessage}/>
-
+          {/* INPUT */}
+          <ChatInput onSend={sendMessage} />
         </motion.div>
-
       </motion.div>
-
     </AnimatePresence>
   );
 };

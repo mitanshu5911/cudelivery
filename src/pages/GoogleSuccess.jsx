@@ -2,38 +2,58 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getCurrentUser } from "../services/authService";
+import { useLoading } from "../context/LoadingContext";
+import { useToast } from "../context/ToastContext";
 
 function GoogleSuccess() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { startLoading, stopLoading } = useLoading();
+  const { showToast } = useToast();
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
+    const handleGoogleLogin = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
 
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+      if (!token) {
+        showToast("error", "Google authentication failed");
+        navigate("/login");
+        return;
+      }
 
-    localStorage.setItem("token", token);
-
-    const fetchUser = async () => {
       try {
-        const user = await getCurrentUser();  
-        setTimeout(()=>{
-        login(token, user);
-        },2000) ;
+        startLoading("Signing you in with Google...");
+
+        localStorage.setItem("token", token);
+
+        const user = await getCurrentUser();
+
+      
+        
+          login(token, user);
+        
+       
+
       } catch (err) {
         console.error("Google login failed", err);
+
+        stopLoading();
+        showToast("error", "Login failed. Please try again");
+
         navigate("/login");
+      }finally{
+        stopLoading();
       }
     };
 
-    fetchUser();
+    handleGoogleLogin();
+
+    
+    return () => stopLoading();
   }, []);
 
-  return <p>Logging you in...</p>;
+  return <div className="min-h-[80vh]"></div>;
 }
 
 export default GoogleSuccess;

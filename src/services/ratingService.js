@@ -8,3 +8,10 @@ export const submitRating = async (requestId, payload) => {
     throw error;
   }
 };
+
+// services/ratingService.js
+export const getMyRatings = async (userId) => {
+  const res = await api.get(`/ratings/day-scholar/${userId}`);
+  return res.data;
+};
+

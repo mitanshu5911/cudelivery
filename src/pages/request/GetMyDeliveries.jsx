@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { getMyDeliveries } from "../../services/requestService";
-// import Alert from "../../components/layouts/Alert";
-import AlertToast from "../../components/ui/AlertToast";
 import RequestModal from "../../components/request/RequestModal";
 import RequestCard from "../../components/request/RequestCard";
 import { useSearchParams } from "react-router-dom";
@@ -11,35 +9,35 @@ import {
   cancelRequest,
 } from "../../services/requestService";
 
-const GetMyDeliveries = () => {
+import { useToast } from "../../context/ToastContext";
+import { useLoading } from "../../context/LoadingContext";
 
-   const [searchParams] = useSearchParams();
-   const tabFormUrl = searchParams.get("tab");
-    const requestId = searchParams.get("request");
+import { getSocket } from "../../socket/socket";
+
+const GetMyDeliveries = () => {
+  const [searchParams] = useSearchParams();
+  const tabFormUrl = searchParams.get("tab");
+  const requestId = searchParams.get("request");
 
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [selectedTab, setSelectedTab] = useState(tabFormUrl || "active");;
+  const [selectedTab, setSelectedTab] = useState(tabFormUrl || "active");
 
-  const [toastMessage, setToastMessage] = useState("");
-  const [toastType, setToastType] = useState("success");
-  const [toastVisible, setToastVisible] = useState(false);
-
- 
+  const { showToast } = useToast();
+  const { startLoading, stopLoading } = useLoading();
 
   const fetchMyDeliveries = async () => {
     try {
       setLoading(true);
+      startLoading("Fetching deliveries...");
       const data = await getMyDeliveries();
-
       setRequests(data);
     } catch (error) {
-      setToastMessage("Failed to fetch pending requests");
-      setToastType("error");
-      setToastVisible(true);
+      showToast("error", "Failed to fetch deliveries");
     } finally {
       setLoading(false);
+      stopLoading();
     }
   };
 
@@ -48,14 +46,56 @@ const GetMyDeliveries = () => {
   }, []);
 
   useEffect(() => {
-  if (!requestId || requests.length === 0) return;
+    if (!requestId || requests.length === 0) return;
+    const req = requests.find((r) => r._id === requestId);
+    if (req) setSelectedRequest(req);
+  }, [requestId, requests]);
 
-  const req = requests.find(r => r._id === requestId);
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
 
-  if (req) {
-    setSelectedRequest(req);
-  }
-}, [requestId, requests]);
+    socket.on("request_updated", (updated) => {
+      setRequests((prev) => {
+        const exists = prev.find((r) => r._id === updated._id);
+
+        if (!updated.acceptedBy) {
+          return prev.filter((r) => r._id !== updated._id);
+        }
+
+        if (updated.acceptedBy?._id !== updated.acceptedBy?._id) {
+          return prev;
+        }
+
+        if (exists) {
+          return prev.map((r) =>
+            r._id === updated._id ? updated : r
+          );
+        }
+
+        return [updated, ...prev];
+      });
+
+      setSelectedRequest((prev) =>
+        prev?._id === updated._id ? { ...updated } : prev
+      );
+    });
+
+    socket.on("request_deleted", ({ _id }) => {
+      setRequests((prev) =>
+        prev.filter((r) => r._id !== _id)
+      );
+
+      setSelectedRequest((prev) =>
+        prev?._id === _id ? null : prev
+      );
+    });
+
+    return () => {
+      socket.off("request_updated");
+      socket.off("request_deleted");
+    };
+  }, []);
 
   const filteredRequests = useMemo(() => {
     return requests.filter((req) => {
@@ -74,38 +114,23 @@ const GetMyDeliveries = () => {
       let response;
 
       if (newStatus === "picked") {
+        startLoading("Marking as picked...");
         response = await markPickedRequest(selectedRequest._id);
-
-        setRequests((prev) =>
-          prev.map((r) =>
-            r._id === selectedRequest._id ? { ...r, status: "picked" } : r,
-          ),
-        );
       } else if (newStatus === "completed") {
+        startLoading("Completing delivery...");
         response = await completeRequest(selectedRequest._id);
-
-        setRequests((prev) =>
-          prev.map((r) =>
-            r._id === selectedRequest._id ? { ...r, status: "completed" } : r,
-          ),
-        );
       } else if (newStatus === "cancelled") {
+        startLoading("Cancelling delivery...");
         response = await cancelRequest(selectedRequest._id);
-
-        setRequests((prev) =>
-          prev.filter((r) => r._id !== selectedRequest._id),
-        );
       }
 
-      setToastMessage(response.message || "Status updated");
-      setToastType("success");
-      setToastVisible(true);
+      showToast("success", response.message || "Status updated");
 
       setSelectedRequest(null);
     } catch (error) {
-      setToastMessage(error.response?.data?.message || "Action failed");
-      setToastType("error");
-      setToastVisible(true);
+      showToast("error", error.response?.data?.message || "Action failed");
+    } finally {
+      stopLoading();
     }
   };
 
@@ -113,7 +138,9 @@ const GetMyDeliveries = () => {
     <div className="w-full">
       <div className="w-full p-6">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-3xl font-bold text-gray-800">My Deliveries</h1>
+          <h1 className="text-3xl font-bold text-gray-800">
+            My Deliveries
+          </h1>
 
           <p className="text-gray-600 mt-1 text-sm">
             Track your accepted and completed deliveries
@@ -194,13 +221,6 @@ const GetMyDeliveries = () => {
           />
         )}
       </div>
-
-      <AlertToast
-        type={toastType}
-        message={toastMessage}
-        visible={toastVisible}
-        onClose={() => setToastVisible(false)}
-      />
     </div>
   );
 };

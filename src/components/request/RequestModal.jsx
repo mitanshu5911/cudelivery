@@ -9,7 +9,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import ChatModal from "../chat/ChatModal";
+ import ChatModal from "../chat/ChatModal";
 import { useState } from "react";
 const statusStyles = {
   pending: "bg-yellow-300 text-yellow-900",
@@ -27,7 +27,7 @@ const RequestModal = ({ request, onClose, onStatusChange }) => {
     request.status === "completed" ||
     request.status === "pending";
 
-  const [openChat, setOpenChat] = useState(false);
+  const [chatRequest, setChatRequest] = useState(null);
   return (
     <AnimatePresence>
       <motion.div
@@ -161,7 +161,7 @@ const RequestModal = ({ request, onClose, onStatusChange }) => {
 
                     <button
                       disabled={disableChat}
-                      onClick={() => setOpenChat(true)}
+                      onClick={() => setChatRequest(request)}
                       className={`flex items-center gap-1 px-3 py-1 text-xs rounded-full ${
                         disableChat
                           ? "bg-gray-200 text-gray-500"
@@ -272,9 +272,12 @@ const RequestModal = ({ request, onClose, onStatusChange }) => {
 
         {/* {body} */}
 
-        {openChat && (
-          <ChatModal request={request} onClose={() => setOpenChat(false)} />
-        )}
+        {chatRequest && (
+  <ChatModal
+    request={chatRequest}
+    onClose={() => setChatRequest(null)}
+  />
+)}
       </motion.div>
     </AnimatePresence>
   );

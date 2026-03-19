@@ -18,10 +18,10 @@ export const ProfileProvider = ({ children }) => {
     const data = await getMyProfile();
     setProfile(data.profile);
     localStorage.setItem("profile", JSON.stringify(data.profile));
-    return true; // profile exists
+    return true; 
   } catch (error) {
     if (error.response?.status === 404) {
-      return false; // profile missing
+      return false; 
     }
     throw error;
   } finally {

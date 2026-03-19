@@ -1,25 +1,69 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, MapPin, MessageCircle, Package, User, X } from "lucide-react";
+import {
+  Clock,
+  MapPin,
+  MessageCircle,
+  Package,
+  User,
+  X,
+  Trash2,
+  Pencil,
+  Star,
+  CheckCircle,
+  Truck,
+  Loader2,
+} from "lucide-react";
 import ChatModal from "../chat/ChatModal";
 import { useState } from "react";
 import RatingModal from "../rating/RatingModal";
-import { Star } from "lucide-react";
+import { useConfirm } from "../../context/ConfirmContext";
 
-const steps = ["pending", "accepted", "picked", "completed"];
+const steps = [
+  { key: "pending", label: "Pending", icon: Loader2 },
+  { key: "accepted", label: "Accepted", icon: User },
+  { key: "picked", label: "Picked", icon: Truck },
+  { key: "completed", label: "Done", icon: CheckCircle },
+];
+
+const statusText = {
+  pending: "Waiting for delivery partner...",
+  accepted: "Partner assigned",
+  picked: "Out for delivery",
+  completed: "Delivered successfully",
+};
+
 const MyRequestModal = ({ request, onClose, onEdit, onDelete, onCancel }) => {
   if (!request) return null;
 
   const [openChat, setOpenChat] = useState(false);
   const [openRating, setOpenRating] = useState(false);
+  const { confirm } = useConfirm();
 
-  const currentStep = steps.indexOf(request.status);
+  const currentStep = steps.findIndex((s) => s.key === request.status);
+
+  const handleDeleteClick = async () => {
+    const ok = await confirm({
+      title: "Delete Request",
+      message: "This action cannot be undone.",
+    });
+    if (ok) onDelete(request);
+  };
+
+  const handleCancelClick = async () => {
+    const ok = await confirm({
+      title: "Cancel Request",
+      message: "Delivery partner will be notified.",
+    });
+    if (ok) onCancel(request);
+  };
+
   return (
     <AnimatePresence>
       <motion.div
+        className="fixed inset-0 bg-black/50 backdrop-blur-md z-50 flex justify-center items-end md:items-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center z-50"
       >
         <motion.div
           drag="y"
@@ -30,177 +74,216 @@ const MyRequestModal = ({ request, onClose, onEdit, onDelete, onCancel }) => {
           initial={{ y: "100%" }}
           animate={{ y: 0 }}
           exit={{ y: "100%" }}
-          transition={{ type: "spring", stiffness: 260, damping: 25 }}
-          className="bg-white w-full md:max-w-6xl max-h-[92vh] rounded-t-3xl md:rounded-2xl shadow-xl flex flex-col overflow-hidden"
+          transition={{ type: "spring", stiffness: 250, damping: 25 }}
+          className="w-full md:max-w-6xl max-h-[92vh] bg-white/90 backdrop-blur-xl rounded-t-3xl md:rounded-2xl shadow-2xl flex flex-col overflow-hidden"
         >
+          {/* MOBILE HANDLE */}
           <div className="md:hidden flex justify-center py-2">
-            <div className="w-10 h-1.5 bg-gray-300 rounded-full"></div>
+            <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
           </div>
 
-          <div className="bg-linear-to-r from-orange-500 to-orange-600 text-white px-5 py-4 flex justify-between items-center">
-            <div>
-              <h2 className="font-bold text-lg">{request.orderId}</h2>
-              <p className="text-xs opacity-80">
-                {new Date(request.createdAt).toLocaleString()}
-              </p>
+          {/* HEADER */}
+          <div className="relative bg-linear-to-r from-orange-500 via-orange-600 to-orange-700 text-white px-6 py-5">
+            <div className="absolute inset-0 bg-white/10 backdrop-blur-md" />
+
+            <div className="relative flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold tracking-wide">
+                  {request.orderId}
+                </h2>
+                <p className="text-xs opacity-80">
+                  {new Date(request.createdAt).toLocaleString()}
+                </p>
+              </div>
+
+              <button onClick={onClose} className="hover:scale-110 transition">
+                <X size={22} />
+              </button>
             </div>
-
-            <button onClick={onClose}>
-              <X size={22} />
-            </button>
           </div>
 
-          <div className="px-5 py-4 border-b">
-            <div className="flex justify-between min-w-75 relative">
-              <div className="absolute top-2 left-0 right-0 h-0.5 bg-gray-200 "></div>
+          {/* 🔥 TIMELINE */}
+          <div className="px-6 py-5">
+            <div className="relative flex justify-between items-center">
+              {/* BASE LINE */}
+              <div className="absolute top-6 left-0 right-0 h-0.75 bg-gray-200 rounded-full" />
 
-              {steps.map((step, index) => {
-                const active = index <= currentStep;
+              {/* PROGRESS LINE FIXED */}
+              <motion.div
+                className="absolute top-6 left-0 h-0.75 bg-linear-to-r from-orange-500 to-orange-600 rounded-full"
+                initial={{ width: 0 }}
+                animate={{
+                  width: `calc(${(currentStep / (steps.length - 1)) * 100}% + 20px)`,
+                }}
+              />
+
+              {steps.map((step, i) => {
+                const active = i <= currentStep;
+                const Icon = step.icon;
 
                 return (
                   <div
-                    key={step}
-                    className="flex flex-col items-center relative z-10 flex-1"
+                    key={step.key}
+                    className="flex flex-col items-center z-10 flex-1"
                   >
-                    <div
-                      className={`w-5 h-5 rounded-full ${
-                        active ? "bg-orange-500" : "bg-gray-300"
-                      }`}
-                    />
+                    <div className="relative">
+                      {/* Pulse effect */}
+                      {active && i === currentStep && (
+                        <span className="absolute w-10 h-10 rounded-full bg-orange-400 opacity-30 animate-ping" />
+                      )}
+
+                      <motion.div
+                        animate={active ? { scale: 1.1 } : { scale: 1 }}
+                        className={`w-10 h-10 flex items-center justify-center rounded-full shadow-md ${
+                          active
+                            ? "bg-orange-500 text-white"
+                            : "bg-gray-200 text-gray-400"
+                        }`}
+                      >
+                        <Icon size={16} />
+                      </motion.div>
+                    </div>
+
                     <span
-                      className={`text-[11px] mt-1 capitalize ${
-                        active ? "text-orange-600 font-medium" : "text-gray-400"
+                      className={`text-xs mt-2 ${
+                        active
+                          ? "text-orange-600 font-semibold"
+                          : "text-gray-400"
                       }`}
                     >
-                      {step}
+                      {step.label}
                     </span>
                   </div>
                 );
               })}
             </div>
+
+            <p className="text-center text-sm text-gray-500 mt-4">
+              {statusText[request.status]}
+            </p>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+          {/* BODY */}
+          <div className="flex-1 overflow-y-auto p-5 md:p-6">
             <div className="grid md:grid-cols-2 gap-5">
-              <div className="bg-gray-50 rounded-xl p-4">
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <Package size={18} />
-                  Items
+              {/* ITEMS */}
+              <div className="bg-white/70 backdrop-blur rounded-xl p-4 shadow-lg flex flex-col max-h-100">
+                <h3 className="font-semibold mb-3 flex gap-2">
+                  <Package size={18} /> Items
                 </h3>
 
-                <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-                  {request.items.map((item, i) => {
-                    const total = item.quantity * item.estimatedPrice;
-
-                    return (
-                      <div
-                        key={i}
-                        className="flex justify-between bg-white rounded-lg p-3 shadow-sm"
-                      >
-                        <div>
-                          <p className="font-medium text-sm">{item.name}</p>
-
-                          <p className="text-xs text-gray-500">
-                            {item.quantity} {item.unit}
-                          </p>
-                        </div>
-
-                        <span className="font-semibold text-sm">₹ {total}</span>
+                <div className="space-y-3 overflow-y-auto flex-1">
+                  {request.items.map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex justify-between bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition"
+                    >
+                      <div>
+                        <p className="font-medium text-sm">{item.name}</p>
+                        <p className="text-xs text-gray-500">
+                          {item.quantity} {item.unit}
+                        </p>
                       </div>
-                    );
-                  })}
+
+                      <span className="font-semibold text-sm text-orange-600">
+                        ₹ {item.quantity * item.estimatedPrice}
+                      </span>
+                    </div>
+                  ))}
                 </div>
 
-                <div className="mt-4 border-t pt-3 space-y-1 text-sm">
+                {/* TOTAL */}
+                <div className="mt-4 border-t pt-3 text-sm space-y-1">
                   <div className="flex justify-between">
                     <span>Items Total</span>
                     <span>₹ {request.itemsTotal}</span>
                   </div>
 
                   <div className="flex justify-between">
-                    <span>Delivery Fee</span>
+                    <span>Delivery</span>
                     <span>₹ {request.deliveryFee}</span>
                   </div>
-                </div>
 
-                <div className="flex justify-between font-semibold border-t pt-2">
-                  <span>Grand Total</span>
-                  <span className="text-orange-600">
-                    ₹ {request.grandTotal}
-                  </span>
+                  <div className="flex justify-between font-bold text-orange-600 border-t pt-2">
+                    <span>Total</span>
+                    <span>₹ {request.grandTotal}</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-4 flex flex-col">
+              {/* DETAILS */}
+              <div className="bg-white/70 backdrop-blur rounded-xl p-4 shadow-lg flex flex-col">
                 <h3 className="font-semibold mb-3">Request Details</h3>
 
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div className="flex items-center gap-2">
+                <div className="space-y-3 text-sm">
+                  <div className="flex gap-2 items-center">
                     <User size={14} />
-                    Requested By:
-                    <span className="font-semibold">
-                      {request.hosteller?.name}
-                    </span>
+                    {request.hosteller?.name}
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex gap-2 items-center">
                     <MapPin size={14} />
-                    Location:
-                    <span className="font-semibold">
-                      {request.deliveryLocation}
-                    </span>
+                    {request.deliveryLocation}
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex gap-2 items-center">
                     <Clock size={14} />
-                    Requested At:
-                    <span className="font-semibold">
-                      {new Date(request.createdAt).toLocaleString()}
-                    </span>
+                    {new Date(request.createdAt).toLocaleString()}
                   </div>
-
-                  {request.acceptedBy && (
-                    <div className="flex items-center gap-2">
-                      Accepted By:
-                      <span className="font-semibold">
-                        {request.acceptedBy.name}
-                      </span>
-                    </div>
-                  )}
                 </div>
 
-                {request.instructions && (
-                  <div className="mt-4 bg-white p-3 rounded-lg text-sm">
-                    <p className="font-medium mb-1">Instructions</p>
-                    <p className="wrap-break-word max-w-75 md:max-w-full">
-                      {request.instructions}
-                    </p>
+                {/* ✅ ACCEPTED BY WITH CHAT ICON */}
+                {request.acceptedBy && (
+                  <div className="mt-4 flex items-center justify-between bg-white rounded-xl p-3 shadow-sm border">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-semibold">
+                        {request.acceptedBy.name?.[0]}
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-semibold">
+                          {request.acceptedBy.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Delivery Partner
+                        </p>
+                      </div>
+                    </div>
+
+                    {request.acceptedBy &&
+                      (request.status === "accepted" ||
+                        request.status === "picked") && (
+                        <button
+                          onClick={() => setOpenChat(true)}
+                          className="bg-green-100 hover:bg-green-200 text-green-600 p-2 rounded-full transition active:scale-90"
+                        >
+                          <MessageCircle size={18} />
+                        </button>
+                      )}
                   </div>
                 )}
 
-                <div className="mt-6 space-y-3">
-                  {request.acceptedBy && (
-                    <button
-                      onClick={() => setOpenChat(true)}
-                      className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg flex items-center justify-center gap-2"
-                    >
-                      <MessageCircle size={16} />
-                      Chat with Deliverer
-                    </button>
-                  )}
+                {request.instructions && (
+                  <div className="mt-4 bg-white p-3 rounded-lg text-sm shadow-inner">
+                    <p className="font-medium mb-1">Instructions</p>
+                    {request.instructions}
+                  </div>
+                )}
 
+                {/* ACTIONS */}
+                <div className="mt-6 space-y-3">
                   {request.status === "pending" && (
                     <div className="flex gap-3">
                       <button
                         onClick={() => onEdit(request)}
-                        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg"
+                        className="w-full py-2.5 rounded-xl bg-yellow-500 text-white font-medium shadow-md hover:bg-yellow-600 hover:scale-[1.02] active:scale-[0.97] transition"
                       >
                         Edit
                       </button>
 
                       <button
-                        onClick={() => onDelete(request)}
-                        className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg"
+                        onClick={handleDeleteClick}
+                        className="w-full py-2.5 rounded-xl bg-red-500 text-white font-medium shadow-md hover:bg-red-600 hover:scale-[1.02] active:scale-[0.97] transition"
                       >
                         Delete
                       </button>
@@ -209,8 +292,8 @@ const MyRequestModal = ({ request, onClose, onEdit, onDelete, onCancel }) => {
 
                   {request.status === "accepted" && (
                     <button
-                      onClick={() => onCancel(request)}
-                      className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg"
+                      onClick={handleCancelClick}
+                      className="w-full py-2.5 rounded-xl bg-red-500 text-white font-medium shadow-md hover:bg-red-600 hover:scale-[1.02] active:scale-[0.97] transition"
                     >
                       Cancel Request
                     </button>
@@ -219,9 +302,9 @@ const MyRequestModal = ({ request, onClose, onEdit, onDelete, onCancel }) => {
                   {request.status === "completed" && request.acceptedBy && (
                     <button
                       onClick={() => setOpenRating(true)}
-                      className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg flex items-center justify-center gap-2"
+                      className="w-full py-3 rounded-xl bg-yellow-500 text-white font-medium shadow-md hover:bg-yellow-600 hover:scale-[1.02] active:scale-[0.97] transition flex justify-center gap-2"
                     >
-                      <Star size={16} />
+                      <Star size={22} />
                       Rate Delivery Partner
                     </button>
                   )}
@@ -230,6 +313,7 @@ const MyRequestModal = ({ request, onClose, onEdit, onDelete, onCancel }) => {
             </div>
           </div>
 
+          {/* MODALS */}
           {openChat && (
             <ChatModal request={request} onClose={() => setOpenChat(false)} />
           )}
@@ -238,9 +322,6 @@ const MyRequestModal = ({ request, onClose, onEdit, onDelete, onCancel }) => {
             <RatingModal
               requestId={request._id}
               onClose={() => setOpenRating(false)}
-              onSuccess={() => {
-                alert("Rating submitted successfully ⭐");
-              }}
             />
           )}
         </motion.div>

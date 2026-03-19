@@ -12,6 +12,7 @@ import { BarChart3 } from "lucide-react";
 
 const RequestsChart = () => {
   const [chartData, setChartData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchRequests = async () => {
@@ -56,6 +57,8 @@ const RequestsChart = () => {
         setChartData(formatted);
       } catch (error) {
         console.error(error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -63,7 +66,9 @@ const RequestsChart = () => {
   }, []);
 
   return (
-    <div className="hidden md:grid bg-white rounded-2xl shadow-md p-6">
+    <div className="hidden md:block bg-white rounded-2xl shadow-md p-6">
+      
+      {/* HEADER */}
       <div className="flex items-center gap-2 mb-4">
         <BarChart3 size={20} className="text-orange-500" />
         <h2 className="text-lg font-semibold text-gray-800">
@@ -71,21 +76,38 @@ const RequestsChart = () => {
         </h2>
       </div>
 
-      <div className="h-60">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData}>
-            <XAxis dataKey="day" stroke="#9ca3af" />
-            <YAxis allowDecimals={false} stroke="#9ca3af" />
-            <Tooltip />
-            <Bar
-              dataKey="requests"
-              fill="#f97316"
-              radius={[6, 6, 0, 0]}
-              animationDuration={800}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {/* LOADING STATE */}
+      {loading && (
+        <div className="h-60 flex items-center justify-center text-gray-400">
+          Loading chart...
+        </div>
+      )}
+
+      {/* EMPTY STATE */}
+      {!loading && chartData.every((d) => d.requests === 0) && (
+        <div className="h-60 flex items-center justify-center text-gray-400">
+          No data available
+        </div>
+      )}
+
+      {/* CHART */}
+      {!loading && chartData.length > 0 && (
+        <div className="w-full h-60 min-h-60">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData}>
+              <XAxis dataKey="day" stroke="#9ca3af" />
+              <YAxis allowDecimals={false} stroke="#9ca3af" />
+              <Tooltip />
+              <Bar
+                dataKey="requests"
+                fill="#f97316"
+                radius={[6, 6, 0, 0]}
+                animationDuration={800}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 };

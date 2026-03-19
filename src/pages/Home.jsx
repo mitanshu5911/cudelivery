@@ -15,6 +15,8 @@ function Home() {
     }
   }, [authMessage]);
 
+
+ 
   if(loading) {
     return (
       <div className="flex justify-center items-center h-[60vh]">

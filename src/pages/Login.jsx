@@ -6,6 +6,9 @@ import { loginUser } from "../services/authService";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import googleLogo from "../assets/googleLogo.png";
+import { motion } from "framer-motion";
+import { Package, Truck, ShieldCheck } from "lucide-react";
+
 function Login() {
   const navigate = useNavigate();
 
@@ -55,11 +58,88 @@ function Login() {
   };
 
   return (
-    <div className="w-full flex justify-center items-center px-4 md:px-8 ">
+    <div className="min-h-[80vh] w-full flex justify-center items-center px-3">
       <div className="w-full max-w-5xl  my-5 rounded-xl flex justify-center overflow-hidden">
-        <div className="hidden md:block left w-1/2 bg-orange-500 "></div>
+        <div className="hidden md:flex w-1/2 relative overflow-hidden">
 
-        <div className="right w-full md:w-1/2 bg-white py-5 flex flex-col items-center justify-center">
+
+  <div className="absolute inset-0 bg-linear-to-br from-orange-500 via-orange-600 to-orange-700" />
+
+  
+  <div className="absolute w-72 h-72 bg-white/10 rounded-full blur-3xl top-10 left-10" />
+  <div className="absolute w-72 h-72 bg-white/10 rounded-full blur-3xl bottom-10 right-10" />
+
+  
+  <div className="relative z-10 flex flex-col justify-center px-12 text-white">
+
+    <motion.h1
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="text-4xl font-bold leading-tight"
+    >
+      Campus Delivery
+      <br />
+      Made Effortless 🚀
+    </motion.h1>
+
+    <motion.p
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      className="mt-4 text-orange-100"
+    >
+      Connect with day scholars to get your items delivered quickly,
+      safely, and hassle-free.
+    </motion.p>
+
+    
+    <div className="mt-8 space-y-4">
+
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.3 }}
+        className="flex items-center gap-3"
+      >
+        <Package size={20} />
+        <span>Request items in seconds</span>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.4 }}
+        className="flex items-center gap-3"
+      >
+        <Truck size={20} />
+        <span>Fast campus delivery</span>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.5 }}
+        className="flex items-center gap-3"
+      >
+        <ShieldCheck size={20} />
+        <span>Secure & trusted system</span>
+      </motion.div>
+
+    </div>
+
+    
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.6 }}
+      className="mt-12 text-sm text-orange-200"
+    >
+      Trusted by students across campus 💡
+    </motion.div>
+
+  </div>
+</div>
+           <div className="right w-full md:w-1/2 bg-white py-5 flex flex-col items-center justify-center">
           <h3 className="text-3xl my-5">Welcome Back</h3>
 
           {error && (
@@ -158,3 +238,4 @@ function Login() {
 }
 
 export default Login;
+

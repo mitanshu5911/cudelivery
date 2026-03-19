@@ -1,33 +1,33 @@
-import React, {  useState } from 'react'
-import api from '../utils/api.js';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import api from "../utils/api.js";
+import { useNavigate } from "react-router-dom";
 function ForgotPassword() {
-    const [email,setEmail] = useState("");
-    const [message,setMessage] = useState("");
-    const [error,setError] = useState("");
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-    const handleSubmit = async (e) =>{
-        e.preventDefault();
-        if(loading) return;
-        try {
-            setLoading(true);
-             setError("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (loading) return;
+    try {
+      setLoading(true);
+      setError("");
       setMessage("");
-            await api.post("/auth/forgot-password", {email});
-            setMessage("Password reset link sent to your email");
-            setError("");
-        } catch (error) {
-            setMessage("");
-            setError(error.response?.data?.message || "Something went wrong"); 
-        }finally{
-          setLoading(false);
-        }
+      await api.post("/auth/forgot-password", { email });
+      setMessage("Password reset link sent to your email");
+      setError("");
+    } catch (error) {
+      setMessage("");
+      setError(error.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
+  };
   return (
-    <div className="w-full flex items-center justify-center px-4">
-      <div className="w-full max-w-sm bg-white p-6 rounded-2xl shadow-lg">
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-md bg-white p-6 rounded-2xl shadow-xl sm:p-8">
         <h2 className="text-2xl font-bold text-center text-gray-800">
           Forgot Password
         </h2>
@@ -44,7 +44,7 @@ function ForgotPassword() {
           <p className="mt-3 text-sm text-green-600 text-center">{message}</p>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-4">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <input
             type="email"
             placeholder="Enter your email"
@@ -77,8 +77,7 @@ function ForgotPassword() {
         </p>
       </div>
     </div>
-
-  )
+  );
 }
 
-export default ForgotPassword
+export default ForgotPassword;

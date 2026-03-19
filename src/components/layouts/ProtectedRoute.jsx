@@ -1,15 +1,22 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useLoading } from "../../context/LoadingContext";
+import { useEffect } from "react";
 
 function ProtectedLayout() {
   const { isAuthenticated, loading } = useAuth();
+  const { startLoading, stopLoading } = useLoading();
 
-  
-  if (loading) {
-    return <div className="w-full text-center mt-10">Loading...</div>;
-  }
+  useEffect(() => {
+    if (loading) {
+      startLoading("Checking authentication...");
+    } else {
+      stopLoading();
+    }
+  }, [loading]);
 
-  if (!isAuthenticated) {
+  if(loading) <div className="min-h-screen"></div>
+  if (!loading && !isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 

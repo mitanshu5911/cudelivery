@@ -9,7 +9,7 @@ const Header = () => {
   const {isAuthenticated} = useAuth();
 
   const navItems = [
-    {name: "Components", path: "/components"},
+    {name: "How it works", path: "/how_it_works"},
     {name: "About Us", path: "/about"},
     {name: "Contact", path: "/contact"},
     {name: "Settings", path: "/settings"},

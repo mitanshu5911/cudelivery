@@ -6,50 +6,81 @@ import {
 } from "../../services/requestService";
 import MyRequestcard from "../../components/request/MyRequestcard.jsx";
 import MyRequestModal from "../../components/request/MyRequestModal.jsx";
-import AlertToast from "../../components/ui/AlertToast.jsx";
 import { useNavigate } from "react-router-dom";
 import { Package } from "lucide-react";
+
+import { useToast } from "../../context/ToastContext";
+import { useLoading } from "../../context/LoadingContext";
+
+import { getSocket } from "../../socket/socket.js";
 
 const GetMyRequests = () => {
   const [requests, setRequests] = useState([]);
   const [activeTab, setActiveTab] = useState("active");
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState({
-    visible: false,
-    type: "success",
-    message: "",
-  });
-  const navigate = useNavigate();
-  const showSuccess = (message) => {
-    setToast({
-      visible: true,
-      type: "success",
-      message,
-    });
-  };
+  // const [loading, setLoading] = useState(true);
 
-  const showError = (message) => {
-    setToast({
-      visible: true,
-      type: "error",
-      message,
-    });
-  };
+  const navigate = useNavigate();
+
+  const { showToast } = useToast();
+  const { startLoading, stopLoading } = useLoading();
+
   const fetchRequests = async () => {
     try {
+      startLoading("Fetching your requests...");
       const data = await getMyRequests();
       setRequests(data);
     } catch (error) {
-      // showError(error);
-      showError(error.response?.data?.message || "Failed to load requests");
+      showToast(
+        "error",
+        error.response?.data?.message || "Failed to load requests"
+      );
     } finally {
-      setLoading(false);
+    
+      stopLoading();
     }
   };
 
   useEffect(() => {
     fetchRequests();
+  }, []);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    socket.on("request_updated", (updated) => {
+      setRequests((prev) => {
+        const exists = prev.find((r) => r._id === updated._id);
+
+        if (exists) {
+          return prev.map((r) =>
+            r._id === updated._id ? updated : r
+          );
+        }
+
+        return [updated, ...prev];
+      });
+
+      setSelectedRequest((prev) =>
+        prev?._id === updated._id ? { ...updated } : prev
+      );
+    });
+
+    socket.on("request_deleted", ({ _id }) => {
+      setRequests((prev) =>
+        prev.filter((r) => r._id !== _id)
+      );
+
+      setSelectedRequest((prev) =>
+        prev?._id === _id ? null : prev
+      );
+    });
+
+    return () => {
+      socket.off("request_updated");
+      socket.off("request_deleted");
+    };
   }, []);
 
   const activeStatuses = ["pending", "accepted", "picked"];
@@ -62,51 +93,58 @@ const GetMyRequests = () => {
 
   const handleDelete = async (request) => {
     if (request.status !== "pending") {
-      showError("Only pending requests can be deleted");
+      showToast("error", "Only pending requests can be deleted");
       return;
     }
 
-    const confirmDelete = window.confirm("Delete this request?");
-
-    if (!confirmDelete) return;
-
     try {
+      startLoading("Deleting request...");
       await deleteRequest(request._id);
 
-      setRequests((prev) => prev.filter((r) => r._id !== request._id));
+      setRequests((prev) =>
+        prev.filter((r) => r._id !== request._id)
+      );
 
       setSelectedRequest(null);
-      showSuccess("Request deleted successfully");
+
+      showToast("success", "Request deleted successfully");
     } catch (error) {
-      console.error(error);
-      showError(error.response?.data?.message || "Delete failed");
+      showToast(
+        "error",
+        error.response?.data?.message || "Delete failed"
+      );
+    } finally {
+      stopLoading();
     }
   };
 
   const handleCancel = async (request) => {
     if (request.status !== "accepted") {
-      showError("Only accepted requests can be cancelled");
+      showToast("error", "Only accepted requests can be cancelled");
       return;
     }
 
-    const confirmCancel = window.confirm("Cancel this request?");
-    if (!confirmCancel) return;
-
     try {
-      const updated = await cancelRequest(request._id);
+      startLoading("Cancelling request...");
+      await cancelRequest(request._id);
 
-      await fetchRequests();
       setSelectedRequest(null);
-      showSuccess("Request Cancelled successfully");
+
+      showToast("success", "Request Cancelled successfully");
     } catch (error) {
-      console.error(error);
-      showError(error.response?.data?.message || "Cancel failed");
+      showToast(
+        "error",
+        error.response?.data?.message || "Cancel failed"
+      );
+    } finally {
+      stopLoading();
     }
   };
 
   const handleEdit = (request) => {
     navigate(`/request/edit/${request._id}`);
   };
+
   return (
     <div className="p-6 w-full">
       <h1 className="text-3xl font-bold mb-6">My Requests</h1>
@@ -137,9 +175,7 @@ const GetMyRequests = () => {
         </div>
       </div>
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : filteredRequests.length === 0 ? (
+      {filteredRequests.length === 0 ? (
         activeTab === "active" ? (
           <div className="flex flex-col items-center justify-center pt-10 text-center">
             <div className="bg-orange-100 p-6 rounded-full mb-4">
@@ -151,8 +187,7 @@ const GetMyRequests = () => {
             </h2>
 
             <p className="text-gray-500 max-w-sm mb-6">
-              You haven't created any requests yet. Create a request to get
-              items delivered by a DayScholar.
+              Create a request to get started 🚀
             </p>
 
             <button
@@ -182,11 +217,12 @@ const GetMyRequests = () => {
           <div className="hidden md:grid grid-cols-6 text-sm font-semibold text-gray-700 px-6 mb-2">
             <div className="pl-8">Request ID</div>
             <div className="pl-8">Items</div>
-            <div className="">Location</div>
+            <div>Location</div>
             <div>Total</div>
             <div>Status</div>
             <div>Created</div>
           </div>
+
           <div className="space-y-3 max-w-6xl mx-auto">
             {filteredRequests.map((req) => (
               <MyRequestcard
@@ -202,23 +238,12 @@ const GetMyRequests = () => {
       {selectedRequest && (
         <MyRequestModal
           request={selectedRequest}
-          onClose={() => {
-            setTimeout(() => {
-              setSelectedRequest(null);
-            }, 0);
-          }}
-          onDelete={handleDelete}
-          onCancel={handleCancel}
-          onEdit={handleEdit}
+          onClose={() => setSelectedRequest(null)}
+          onDelete={() => handleDelete(selectedRequest)}
+          onCancel={() => handleCancel(selectedRequest)}
+          onEdit={() => handleEdit(selectedRequest)}
         />
       )}
-
-      <AlertToast
-        type={toast.type}
-        message={toast.message}
-        visible={toast.visible}
-        onClose={() => setToast((prev) => ({ ...prev, visible: false }))}
-      />
     </div>
   );
 };

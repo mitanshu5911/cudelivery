@@ -15,14 +15,23 @@ import CreateRequest from "./pages/request/CreateRequest.jsx";
 import GetPendingRequest from "./pages/request/GetPendingRequest.jsx";
 import GetMyDeliveries from "./pages/request/GetMyDeliveries.jsx";
 import GetMyRequests from "./pages/request/GetMyRequests.jsx";
+import HowItWorks from "./pages/HowItWorks.jsx";
+import Footer from "./components/layouts/footer/Footer.jsx";
+import AboutUs from "./pages/AboutUs.jsx";
+import Contact from "./pages/Contact.jsx";
+import Settings from "./pages/Settings.jsx";
 
 function App() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col">
       <Header />
 
-      <main className="flex-1 flex">
+      <main className="flex-1">
         <Routes>
+          <Route path="/how_it_works" element={<HowItWorks/>}/>
+          <Route path="/about" element={<AboutUs/>}/>
+          <Route path="/contact" element={<Contact/>}/>
+
           <Route element={<GuestRoute />}>
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
@@ -33,6 +42,7 @@ function App() {
 
           <Route element={<ProtectedLayout />}>
             <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings/>}/>
 
             <Route element={<ProfileProtectedLayout />}>
               <Route path="/" element={<Home />} />
@@ -56,6 +66,8 @@ function App() {
           </Route>
         </Routes>
       </main>
+
+      <Footer/>
     </div>
   );
 }

@@ -12,19 +12,25 @@ import {
 } from "react-icons/fa";
 import { MdLocationPin } from "react-icons/md";
 import { useProfile } from "../context/ProfileContext.jsx";
-import Alert from "../components/layouts/Alert.jsx";
-
+import { useLoading } from "../context/LoadingContext.jsx";
+import { useToast } from "../context/ToastContext.jsx";
 const Profile = () => {
-  const { user , loading} = useAuth();
-if (loading) {
-  return <div>Loading...</div>;
-}
+  const { user, loading } = useAuth();
+  const { startLoading, stopLoading } = useLoading();
 
-if (!user) {
-  return <div>Please login</div>;
-}
-  console.log("Authenticated user:", user);
+  useEffect(() => {
+    if (loading) {
+      startLoading("Loading Profile...");
+    }
+
+    return () => {
+      stopLoading();
+    };
+  }, []);
+
+  // console.log("Authenticated user:", user);
   const { profile, updateProfileContext } = useProfile();
+  const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
     rollNumber: "",
@@ -36,13 +42,10 @@ if (!user) {
 
   const [idCard, setIdCard] = useState(null);
   const [preview, setPreview] = useState("");
-  const [loaading, setLoaading] = useState(false);
-  const [alert, setAlert] = useState({ type: "", message: "" });
 
   const isDayScholar = formData.role === "DayScholar";
   const isHosteller = formData.role === "Hosteller";
 
-  
   useEffect(() => {
     if (profile) {
       setFormData({
@@ -61,9 +64,8 @@ if (!user) {
 
       if (profile.idCardUrl) setPreview(profile.idCardUrl);
     }
-  }, [ profile]);
+  }, [profile]);
 
-  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -81,19 +83,21 @@ if (!user) {
     if (!file) return;
 
     if (preview?.startsWith("blob:")) {
-      URL.revokeObjectURL(preview); 
+      URL.revokeObjectURL(preview);
     }
 
     setIdCard(file);
     setPreview(URL.createObjectURL(file));
   };
 
-  
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoaading(true);
-    setAlert({});
+    startLoading(profile ? "Updating profile..." : "Creating profile...");
 
+    if (!formData.rollNumber || !formData.phone) {
+      showToast("error", "Please fill all required fields");
+      return;
+    }
     try {
       const data = new FormData();
       data.append("rollNumber", formData.rollNumber);
@@ -112,52 +116,52 @@ if (!user) {
 
       updateProfileContext(response.profile);
 
-      setAlert({
-        type: "success",
-        message: profile
+      showToast(
+        "success",
+        profile
           ? "Profile updated successfully"
           : "Profile created successfully",
-      });
+      );
 
       if (response.profile?.idCardUrl) {
         setPreview(response.profile.idCardUrl);
       }
     } catch (err) {
-      setAlert({
-        type: "error",
-        message: err.message || "Something went wrong",
-      });
+      showToast("error", err.message || "Something went wrong");
     } finally {
-      setLoaading(false);
+      stopLoading();
     }
   };
-
 
   return (
     <div className="w-full flex justify-center py-10 px-4">
       <div className="bg-white shadow-xl rounded-xl w-full max-w-5xl p-6 md:p-10">
         <h2 className="text-3xl font-bold text-gray-800 mb-6">Profile</h2>
 
-        {alert.message && (
-          <Alert
-            type={alert.type}
-            message={alert.message}
-            onClose={() => setAlert({})}
-          />
-        )}
-
         <form
           onSubmit={handleSubmit}
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
-          <Input icon={<FiUser />} value={user?.name} name="name" autoComplete="name" readOnly />
-          <Input icon={<FiMail />} value={user?.email} name="email" autoComplete="email" readOnly />
+          <Input
+            icon={<FiUser />}
+            value={user?.name||""}
+            name="name"
+            autoComplete="name"
+            readOnly
+          />
+          <Input
+            icon={<FiMail />}
+            value={user?.email||""}
+            name="email"
+            autoComplete="email"
+            readOnly
+          />
 
           <Input
             icon={<FaRegIdCard />}
             placeholder="Roll Number"
             name="rollNumber"
-            value={formData.rollNumber}
+            value={formData.rollNumber||""}
             onChange={handleChange}
             required
           />
@@ -167,7 +171,7 @@ if (!user) {
             placeholder="Phone Number"
             name="phone"
             maxLength={10}
-            value={formData.phone}
+            value={formData.phone||""}
             onChange={handleChange}
             autoComplete="tel"
             required
@@ -178,7 +182,6 @@ if (!user) {
             <Radio
               label="Day Scholar"
               checked={isDayScholar}
-            
               onChange={() =>
                 setFormData((p) => ({
                   ...p,
@@ -190,7 +193,6 @@ if (!user) {
             <Radio
               label="Hosteller"
               checked={isHosteller}
-          
               onChange={() =>
                 setFormData((p) => ({
                   ...p,
@@ -212,7 +214,7 @@ if (!user) {
                   handleNestedChange(
                     "dayScholarInfo",
                     "location",
-                    e.target.value
+                    e.target.value,
                   )
                 }
               />
@@ -225,7 +227,7 @@ if (!user) {
                   handleNestedChange(
                     "dayScholarInfo",
                     "availableTime",
-                    e.target.value
+                    e.target.value,
                   )
                 }
               />
@@ -243,7 +245,7 @@ if (!user) {
                   handleNestedChange(
                     "hostellerInfo",
                     "hostelName",
-                    e.target.value
+                    e.target.value,
                   )
                 }
               />
@@ -256,7 +258,7 @@ if (!user) {
                   handleNestedChange(
                     "hostellerInfo",
                     "roomNumber",
-                    e.target.value
+                    e.target.value,
                   )
                 }
               />
@@ -266,7 +268,12 @@ if (!user) {
           <div className="col-span-full flex justify-center items-center gap-4">
             <label className="flex items-center gap-2 border px-4 py-2 rounded cursor-pointer h-12">
               <FaFile /> Upload ID Card
-              <input type="file" hidden accept="image/*" onChange={handleFileChange} />
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handleFileChange}
+              />
             </label>
 
             {preview && (
@@ -283,11 +290,7 @@ if (!user) {
               disabled={loading}
               className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-2 rounded-lg"
             >
-              {loaading
-                ? "Saving..."
-                : profile
-                ? "Update Profile"
-                : "Create Profile"}
+              {profile ? "Update Profile" : "Create Profile"}
             </button>
           </div>
         </form>
@@ -304,7 +307,9 @@ const Input = ({ icon, ...props }) => (
 );
 
 const Radio = ({ label, checked, onChange, disabled }) => (
-  <label className={`flex items-center gap-2 font-semibold ${disabled && "opacity-60"}`}>
+  <label
+    className={`flex items-center gap-2 font-semibold ${disabled && "opacity-60"}`}
+  >
     <input
       type="radio"
       checked={checked}

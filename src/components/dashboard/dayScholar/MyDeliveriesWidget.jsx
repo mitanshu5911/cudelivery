@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getMyDeliveries } from "../../../services/requestService";
 import { useNavigate } from "react-router-dom";
 import { PackageCheck } from "lucide-react";
+import { getSocket } from "../../../socket/socket";
 
 const MyDeliveriesWidget = () => {
   const [deliveries, setDeliveries] = useState([]);
@@ -20,6 +21,20 @@ const MyDeliveriesWidget = () => {
     fetchDeliveries();
   }, []);
 
+  /* 🔥 REAL-TIME */
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    socket.on("request_updated", fetchDeliveries);
+    socket.on("request_deleted", fetchDeliveries);
+
+    return () => {
+      socket.off("request_updated", fetchDeliveries);
+      socket.off("request_deleted", fetchDeliveries);
+    };
+  }, []);
+
   const statusStyles = {
     accepted: "bg-orange-100 text-orange-600",
     picked: "bg-yellow-100 text-yellow-600",
@@ -28,10 +43,9 @@ const MyDeliveriesWidget = () => {
 
   return (
     <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col h-full mx-2 md:mx-0">
-
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">
-          <PackageCheck className="text-orange-500" size={20}/>
+          <PackageCheck className="text-orange-500" size={20} />
           <h2 className="text-lg font-semibold text-gray-800">
             My Deliveries
           </h2>
@@ -43,7 +57,6 @@ const MyDeliveriesWidget = () => {
       </div>
 
       <div className="flex flex-col gap-3 grow">
-
         {deliveries.length === 0 && (
           <div className="text-center text-gray-400 py-8 text-sm">
             No deliveries yet
@@ -75,7 +88,6 @@ const MyDeliveriesWidget = () => {
             </span>
           </div>
         ))}
-
       </div>
 
       <button
@@ -84,7 +96,6 @@ const MyDeliveriesWidget = () => {
       >
         View All
       </button>
-
     </div>
   );
 };

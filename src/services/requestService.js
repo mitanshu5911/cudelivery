@@ -97,3 +97,13 @@ export const updateRequest = async (id, payload) => {
         throw error;
     }
 };
+
+export const getWeeklyStats = async () => {
+    // console.log("calling the graph data");
+ try {
+     const res = await api.get("/request/weekly-stats");
+  return res.data;
+ } catch (error) {
+    console.error(error);
+ }
+};
