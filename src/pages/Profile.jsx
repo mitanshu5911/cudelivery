@@ -14,10 +14,11 @@ import { MdLocationPin } from "react-icons/md";
 import { useProfile } from "../context/ProfileContext.jsx";
 import { useLoading } from "../context/LoadingContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
+import { useNavigate } from "react-router-dom";
 const Profile = () => {
   const { user, loading } = useAuth();
   const { startLoading, stopLoading } = useLoading();
-
+  const navigate = useNavigate();
   useEffect(() => {
     if (loading) {
       startLoading("Loading Profile...");
@@ -122,7 +123,9 @@ const Profile = () => {
           ? "Profile updated successfully"
           : "Profile created successfully",
       );
-
+      if(!profile){
+        navigate("/home");
+      }
       if (response.profile?.idCardUrl) {
         setPreview(response.profile.idCardUrl);
       }

@@ -72,6 +72,7 @@ function Register() {
     try {
       const res = await registerUser({ name, email, password });
       setSuccess(res.message);
+      navigate("/login");
       setError("");
     } catch (err) {
       setSuccess("");

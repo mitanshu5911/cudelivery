@@ -3,10 +3,12 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useProfile } from '../context/ProfileContext.jsx';
 import DayScholarDashboard from './dashboard/DayScholarDashboard.jsx';
 import HostellerDashboard from './dashboard/HostellerDashboard.jsx';
+import { useLoading } from '../context/LoadingContext.jsx';
 
 function Home() {
   const { authMessage, setAuthMessage } = useAuth();
   const {isDayScholar, isHosteller, loading} = useProfile();
+  const {startLoading} = useLoading();
 
   useEffect(() => {
     if (authMessage) {
@@ -18,11 +20,7 @@ function Home() {
 
  
   if(loading) {
-    return (
-      <div className="flex justify-center items-center h-[60vh]">
-        Loading dashboard...
-      </div>
-    );
+    startLoading("Loading");
   }
 
   if (isDayScholar) {
